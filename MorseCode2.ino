@@ -9,7 +9,6 @@ enum LCD_States1 {LCD_Write, LCD_Practice, LCD_Letters, LCD_Buffer, LCD_LettPrac
 
 char buttonEncoder = 0;
 char buttonPush = 0;
-// char myWords[154];
 int prevLCDState;
 int passBuzz = 22;
 
@@ -168,6 +167,10 @@ void setup() {
   lastStateCLK = digitalRead(50);
   randomSeed(analogRead(A0));
 
+  // digitalWrite(redPin, HIGH);
+  // digitalWrite(greenPin, HIGH);
+  // digitalWrite(bluePin, HIGH);
+
   Serial.begin(9600);
 }
 
@@ -189,4 +192,47 @@ void loop() {
   
   while (!TimerFlag) {}
   TimerFlag = 0;
+}
+
+void LEDLetters(char ch) {
+  if (ch == 'A') {
+    LED_Dot();
+    LED_Off();
+    LED_Dash();
+  }
+  if (ch == 'B') {
+    LED_Dash();
+    LED_Off();
+    LED_Dot();
+    LED_Off();
+    LED_Dot();
+    LED_Off();
+    LED_Dot();
+    LED_Off();
+  }
+}
+
+
+void LED_Dot() {
+  for (int i = 0; i < 1; ++i) {
+    digitalWrite(redPin, HIGH);
+    digitalWrite(greenPin, HIGH);
+    digitalWrite(bluePin, HIGH);
+  }
+}
+
+void LED_Dash() {
+  for (int i = 0; i < 5; ++i) {
+    digitalWrite(redPin, HIGH);
+    digitalWrite(greenPin, HIGH);
+    digitalWrite(bluePin, HIGH);
+  }
+}
+
+void LED_Off() {
+  for (int i = 0; i < 1; ++i) {
+    digitalWrite(redPin, LOW);
+    digitalWrite(greenPin, LOW);
+    digitalWrite(bluePin, LOW);
+  }
 }
