@@ -6,6 +6,7 @@ const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 enum LCD_States1 {LCD_Write, LCD_Practice, LCD_Letters, LCD_Buffer, LCD_LettPrac} LCD_State1;
+enum LED_States1 {LED_Off, LED_On} LED_State1;
 
 char buttonEncoder = 0;
 char buttonPush = 0;
@@ -89,6 +90,15 @@ void tick_LCD() {
       }
       else if (buttonEncoder) {
         LCD_State1 = LCD_LettPrac;
+
+        if (buttonPush) { /// added this 6/30
+          if (ch >= 'Z') {
+            ch = 'A';
+          }
+          else if (ch < 'Z') {
+            ++ch;
+          }
+        }
       }
       break;
 
@@ -106,6 +116,9 @@ void tick_LCD() {
         LCD_State1 = LCD_Write;
       }
       else if ( (buttonEncoder && FlagLett) && prevLCDState == LCD_Letters) {
+        LCD_State1 = LCD_LettPrac;
+      }
+      else if (!buttonPush && prevLCDState == LCD_LettPrac) { /// added this 6/30
         LCD_State1 = LCD_LettPrac;
       }
   }
@@ -145,6 +158,64 @@ void tick_LCD() {
   }
 }
 
+void tick_LED() {
+
+  // transitions
+  switch (LED_State1) {
+    case LED_Off:
+      if (!FlagLett) {
+        LED_State1 = LED_Off;
+      }
+      else if (FlagLett) {
+        LED_State1 = LED_On;
+      }
+      break;
+
+    case LED_On:
+      // if (ch == ' ') {
+      //   LED_State1 = LED_Off;
+      // }
+      // else if ( !(ch == ' ') ) {
+      //   LED_State1 = LED_On;
+      // }
+        if (!FlagLett) {
+          LED_State1 = LED_Off;
+        }
+        else if (FlagLett) {
+          LED_State1 = LED_On;
+        }
+      break;
+  }
+
+  // actions
+  switch (LED_State1) {
+    case LED_Off:
+      LED_Blank();
+      break;
+
+    case LED_On:
+      i = 0;
+      if (ch == 'A') {
+        if (i < 1) {
+          LED_Dot();
+          ++i;
+        }
+        else if (i < 2) {
+          LED_Blank();
+          ++i;
+        }
+        else if (i < 5) {
+          LED_Dash();
+          ++i;
+        }
+      }
+      if ( !(ch == 'A')) {
+        LED_Blank();
+      }
+      break;
+  }
+}
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -180,15 +251,6 @@ void loop() {
   buttonEncoder = digitalRead(53);
 
   tick_LCD();
-
-  if (FlagLett && buttonPush) {
-    if (ch >= 'Z') {
-      ch = 'A';
-    }
-    else if (ch < 'Z') {
-      ++ch;
-    }
-  }
   
   while (!TimerFlag) {}
   TimerFlag = 0;
@@ -197,42 +259,35 @@ void loop() {
 void LEDLetters(char ch) {
   if (ch == 'A') {
     LED_Dot();
-    LED_Off();
+    LED_Blank();
     LED_Dash();
   }
   if (ch == 'B') {
     LED_Dash();
-    LED_Off();
+    LED_Blank();
     LED_Dot();
-    LED_Off();
+    LED_Blank();
     LED_Dot();
-    LED_Off();
+    LED_Blank();
     LED_Dot();
-    LED_Off();
+    LED_Blank();
   }
 }
 
-
 void LED_Dot() {
-  for (int i = 0; i < 1; ++i) {
     digitalWrite(redPin, HIGH);
     digitalWrite(greenPin, HIGH);
     digitalWrite(bluePin, HIGH);
-  }
 }
 
 void LED_Dash() {
-  for (int i = 0; i < 5; ++i) {
     digitalWrite(redPin, HIGH);
     digitalWrite(greenPin, HIGH);
     digitalWrite(bluePin, HIGH);
-  }
 }
 
-void LED_Off() {
-  for (int i = 0; i < 1; ++i) {
+void LED_Blank() {
     digitalWrite(redPin, LOW);
     digitalWrite(greenPin, LOW);
     digitalWrite(bluePin, LOW);
-  }
 }
