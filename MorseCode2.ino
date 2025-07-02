@@ -6,14 +6,16 @@ const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 enum LCD_States1 {LCD_Write, LCD_Practice, LCD_Letters, LCD_Buffer, LCD_LettPrac} LCD_State1;
-enum LED_States1 {LED_Off, LED_On} LED_State1;
+enum LED_States1 {LED_Off, LED_Buffer, LED_Dot, LED_Dash, LED_Beat1, LED_Beat2, LED_Beat3, LED_Beat4} LED_State1;
 
 char buttonEncoder = 0;
 char buttonPush = 0;
 int prevLCDState;
+int prevLEDState;
 int passBuzz = 22;
 
-int i = 0;
+int unit = 0;
+int beat = 0;
 long randomNumber;
 int easyPick;
 int mediumPick;
@@ -130,6 +132,7 @@ void tick_LCD() {
       lcd.write("Write");
       lcd.setCursor(3, 1);
       lcd.write("Morse Code");
+      LED_Blank();
       break;
     
     case LCD_Practice:
@@ -167,51 +170,152 @@ void tick_LED() {
         LED_State1 = LED_Off;
       }
       else if (FlagLett) {
-        LED_State1 = LED_On;
+        LED_State1 = LED_Beat1;
       }
       break;
 
-    case LED_On:
-      // if (ch == ' ') {
-      //   LED_State1 = LED_Off;
-      // }
-      // else if ( !(ch == ' ') ) {
-      //   LED_State1 = LED_On;
-      // }
-        if (!FlagLett) {
-          LED_State1 = LED_Off;
+    case LED_Buffer:
+      if (buttonPush) { ////added this july 2
+        LED_State1 = LED_Off;
+        prevLEDState = LED_Beat1;
+      }
+      if (unit < 1) {
+        LED_State1 = LED_Buffer;
+      }
+      else if ( !(unit < 1) ) {
+        if (prevLEDState == LED_Beat1) {
+          LED_State1 = LED_Beat2;
         }
-        else if (FlagLett) {
-          LED_State1 = LED_On;
+        else if (prevLEDState == LED_Beat2) {
+          LED_State1 = LED_Beat3;
         }
+        else if (prevLEDState == LED_Beat3) {
+          LED_State1 = LED_Beat4;
+        }
+        else if (prevLEDState == LED_Beat4) {
+          LED_State1 = LED_Beat1;
+        }
+      }
+      break;
+
+    case LED_Dot:
+      if (buttonPush) { ////added this july 2
+        LED_State1 = LED_Off;
+        prevLEDState = LED_Beat1;
+      }
+      if (unit < 1) {
+        LED_State1 = LED_Dot;
+      }
+      else if  ( !(unit < 1) ) {
+        unit = 0;
+        LED_State1 = LED_Buffer;
+      }
+      break;
+
+    case LED_Dash:
+      if (buttonPush) { ////added this july 2
+        LED_State1 = LED_Off;
+        prevLEDState = LED_Beat1;
+      }
+      if (unit < 5) {
+        LED_State1 = LED_Dash;
+      }
+      else if ( !(unit < 5) ) {
+        unit = 0;
+        LED_State1 = LED_Buffer;
+      }
+      break; 
+    
+    case LED_Beat1:
+      if (buttonPush) { ////added this july 2
+        LED_State1 = LED_Off;
+        prevLEDState = LED_Beat1;
+      }
+      prevLEDState = LED_Beat1;
+      if (ch == 'A' || ch == 'E' || ch == 'F' || ch == 'H' || ch == 'I' || ch == 'J' || ch == 'L' || ch == 'P' || ch == 'R' || ch == 'S' || ch == 'U' || ch == 'V' || ch == 'W') {
+        LED_State1 = LED_Dot;
+      }
+      else if (ch == 'B' || ch == 'C' || ch == 'D' || ch == 'G' || ch == 'K' || ch == 'M' || ch == 'N' || ch == 'O' || ch == 'Q' || ch == 'T' || ch == 'X' || ch == 'Y' || ch == 'Z') {
+        LED_State1 = LED_Dash;
+      }
+      break;
+    
+    case LED_Beat2:
+      if (buttonPush) { ////added this july 2
+        LED_State1 = LED_Off;
+        prevLEDState = LED_Beat1;
+      }
+      prevLEDState = LED_Beat2;
+      if (ch == 'B' || ch == 'C' || ch == 'D' || ch == 'F' || ch == 'H' || ch == 'I' || ch == 'K' || ch == 'N' || ch == 'S' || ch == 'U' || ch == 'V' || ch == 'X' || ch == 'Y') {
+        LED_State1 = LED_Dot;
+      }
+
+      else if (ch == 'A' || ch == 'G' || ch == 'J' || ch == 'L' || ch == 'M' || ch == 'O' || ch == 'P' || ch == 'Q' || ch == 'R' || ch == 'W' || ch == 'Z') {
+        LED_State1 = LED_Dash;
+      }
+      break;
+
+    case LED_Beat3:
+      if (buttonPush) { ////added this july 2
+        LED_State1 = LED_Off;
+        prevLEDState = LED_Beat1;
+      }
+      prevLEDState = LED_Beat3;
+      if (ch == 'B' || ch == 'D' || ch == 'G' || ch == 'L' || ch == 'Q' || ch == 'R' || ch == 'S' || ch == 'V' || ch == 'X' || ch == 'Z') {
+        LED_State1 = LED_Dot;
+      }
+      else if (ch == 'C' || ch == 'F' || ch == 'H' || ch == 'J' || ch == 'K' || ch == 'O' || ch == 'P' || ch == 'U' || ch == 'W' || ch == 'Y') {
+        LED_State1 = LED_Dash;
+      }
+      break;
+
+    case LED_Beat4:
+      if (buttonPush) { ////added this july 2
+        LED_State1 = LED_Off;
+        prevLEDState = LED_Beat1;
+      }
+      prevLEDState = LED_Beat4;
+      if (ch == 'B' || ch == 'C' || ch == 'F' || ch == 'H' || ch == 'L' || ch == 'P' || ch == 'Z') {
+        LED_State1 = LED_Dot;
+      }
+      else if (ch == 'J' || ch == 'Q' || ch == 'V' || ch == 'X' || ch == 'Y') {
+        LED_State1 = LED_Dash;
+      }
       break;
   }
 
   // actions
   switch (LED_State1) {
     case LED_Off:
+      unit = 0;
       LED_Blank();
       break;
 
-    case LED_On:
-      i = 0;
-      if (ch == 'A') {
-        if (i < 1) {
-          LED_Dot();
-          ++i;
-        }
-        else if (i < 2) {
-          LED_Blank();
-          ++i;
-        }
-        else if (i < 5) {
-          LED_Dash();
-          ++i;
-        }
-      }
-      if ( !(ch == 'A')) {
-        LED_Blank();
-      }
+    case LED_Buffer:
+      ++unit;
+      LED_Blank();
+      break;
+
+    case LED_Dot:
+      ++unit;
+      LED_On();
+      break;
+
+    case LED_Dash:
+      ++unit;
+      LED_On();
+      break;
+
+    case LED_Beat1:
+      break;
+    
+    case LED_Beat2:
+      break;
+
+    case LED_Beat3:
+      break;
+
+    case LED_Beat4:
       break;
   }
 }
@@ -238,10 +342,6 @@ void setup() {
   lastStateCLK = digitalRead(50);
   randomSeed(analogRead(A0));
 
-  // digitalWrite(redPin, HIGH);
-  // digitalWrite(greenPin, HIGH);
-  // digitalWrite(bluePin, HIGH);
-
   Serial.begin(9600);
 }
 
@@ -251,43 +351,20 @@ void loop() {
   buttonEncoder = digitalRead(53);
 
   tick_LCD();
+  tick_LED();
   
   while (!TimerFlag) {}
   TimerFlag = 0;
 }
 
-void LEDLetters(char ch) {
-  if (ch == 'A') {
-    LED_Dot();
-    LED_Blank();
-    LED_Dash();
-  }
-  if (ch == 'B') {
-    LED_Dash();
-    LED_Blank();
-    LED_Dot();
-    LED_Blank();
-    LED_Dot();
-    LED_Blank();
-    LED_Dot();
-    LED_Blank();
-  }
-}
-
-void LED_Dot() {
-    digitalWrite(redPin, HIGH);
-    digitalWrite(greenPin, HIGH);
-    digitalWrite(bluePin, HIGH);
-}
-
-void LED_Dash() {
-    digitalWrite(redPin, HIGH);
-    digitalWrite(greenPin, HIGH);
-    digitalWrite(bluePin, HIGH);
+void LED_On() {
+  digitalWrite(redPin, HIGH);
+  digitalWrite(greenPin, LOW);
+  digitalWrite(bluePin, LOW);
 }
 
 void LED_Blank() {
-    digitalWrite(redPin, LOW);
-    digitalWrite(greenPin, LOW);
-    digitalWrite(bluePin, LOW);
+  digitalWrite(redPin, LOW);
+  digitalWrite(greenPin, LOW);
+  digitalWrite(bluePin, LOW);
 }
