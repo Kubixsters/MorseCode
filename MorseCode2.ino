@@ -243,10 +243,10 @@ void tick_LED() {
         LED_State1 = LED_Repeat;
         prevLEDState = LED_Beat1;
       }
-      else if (ch == 'F' || ch == 'H' || ch == 'J' || ch == 'L' || ch == 'P' || ch == 'V') {
+      else if (ch == 'A' || ch == 'E' || ch == 'F' || ch == 'H' || ch == 'I' || ch == 'J' || ch == 'L' || ch == 'P' || ch == 'R' || ch == 'S' || ch == 'U' || ch == 'V' || ch == 'W') {
         LED_State1 = LED_Dot;
       }
-      else if (ch == 'B' || ch == 'C' || ch == 'Q' || ch == 'X' || ch == 'Y' || ch == 'Z') {
+      else if (ch == 'B' || ch == 'C' || ch == 'D' || ch == 'G' || ch == 'K' || ch =='M' || ch == 'N' || ch == 'O' || ch == 'Q' || ch == 'T' || ch == 'X' || ch == 'Y' || ch == 'Z') {
         LED_State1 = LED_Dash;
       }
       break;
@@ -259,11 +259,15 @@ void tick_LED() {
         LED_State1 = LED_Repeat;
         prevLEDState = LED_Beat1;
       }
-      else if (ch == 'B' || ch == 'C' || ch == 'F' || ch == 'H' || ch == 'V' || ch == 'X' || ch == 'Y') {
+      else if (ch == 'B' || ch == 'C' || ch == 'D' || ch == 'F' || ch == 'H' || ch == 'I' || ch == 'K' || ch == 'N' || ch == 'S' || ch == 'U' || ch == 'V' || ch == 'X' || ch == 'Y') {
         LED_State1 = LED_Dot;
       }
-      else if (ch == 'J' || ch == 'L' || ch == 'P' || ch == 'Q' || ch == 'Z') {
+      else if (ch == 'A' || ch == 'G' || ch == 'J' || ch == 'L' || ch == 'M' || ch == 'O' || ch == 'P' || ch == 'Q' || ch == 'R' || ch == 'W' || ch == 'Z') {
         LED_State1 = LED_Dash;
+      }
+      else if (ch == 'E' || ch == 'T') {
+        LED_State1 = LED_Repeat;
+        prevLEDState = LED_Beat1;
       }
       break;
 
@@ -275,11 +279,15 @@ void tick_LED() {
         LED_State1 = LED_Repeat;
         prevLEDState = LED_Beat1;
       }
-      else if (ch == 'B' ||  ch == 'H' || ch == 'L' || ch == 'Q' || ch == 'V' || ch == 'X' || ch == 'Z') {
+      else if (ch == 'B' || ch == 'D' || ch == 'G' || ch == 'H' || ch == 'L' || ch == 'Q' || ch == 'R' || ch == 'S' || ch == 'V' || ch == 'X' || ch == 'Z') {
         LED_State1 = LED_Dot;
       }
-      else if (ch == 'C' || ch == 'F' || ch == 'J' || ch == 'P' || ch == 'Y') {
+      else if (ch == 'C' || ch == 'F' || ch == 'J' || ch == 'K' || ch == 'O' || ch == 'P' || ch == 'U' || ch == 'W' || ch == 'Y') {
         LED_State1 = LED_Dash;
+      }
+      else if (ch == 'A' || ch == 'I' || ch == 'M' || ch == 'N') {
+        LED_State1 = LED_Repeat;
+        prevLEDState = LED_Beat1;
       }
       break;
 
@@ -296,6 +304,10 @@ void tick_LED() {
       }
       else if (ch == 'J' || ch == 'Q' || ch == 'V' || ch == 'X' || ch == 'Y') {
         LED_State1 = LED_Dash;
+      }
+      else if (ch == 'D' || ch == 'G' || ch == 'K' || ch == 'O' || ch == 'R' || ch == 'S' || ch == 'U' || ch == 'W') {
+        LED_State1 = LED_Repeat;
+        prevLEDState = LED_Beat1;
       }
       break;
 
