@@ -5,16 +5,20 @@
 const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-enum LCD_States1 {LCD_Write, LCD_Practice, LCD_Letters, LCD_Buffer, LCD_LettPrac} LCD_State1;
+enum LCD_States1 {LCD_Write, LCD_Practice, LCD_PractIn, LCD_Letters, LCD_LettPrac, LCD_Buffer} LCD_State1;
 enum LED_States1 {LED_Off, LED_Buffer, LED_Dot, LED_Dash, LED_Beat1, LED_Beat2, LED_Beat3, LED_Beat4, LED_Repeat} LED_State1;
+enum DifficultyStates {Easy, Medium, Hard, Challenge, DiffBuffer} Difficulty_State;
 
 char buttonEncoder = 0;
 char buttonPush = 0;
+int passBuzz = 22;
+int unit = 0;
+int counter = 0;
+
 int prevLCDState;
 int prevLEDState;
-int passBuzz = 22;
+int prevDiffState;
 
-int unit = 0;
 long randomNumber;
 int easyPick;
 int mediumPick;
@@ -26,12 +30,19 @@ char* mediumWord;
 char* hardWord;
 char* challengeWord;
 
-int counter = 0;
+// easyWord = myWords[random(52)];
+
 char ch = 'A';
-bool FlagLett = false;
-bool FlagRepeat = false;
 int lastStateCLK;
 int currStateCLK;
+
+bool FlagLett = false;
+bool FlagRepeat = false;
+bool FlagPract = false;
+bool isEasy = false;
+bool isMedium = false;
+bool isHard = false;
+bool isChallenge = false;
 
 int redPin = 41;
 int greenPin = 40;
@@ -54,12 +65,38 @@ void tick_LCD() {
 
     case LCD_Practice:
       prevLCDState = LCD_Practice;
+      FlagPract = false;
       if (buttonPush) {
         lcd.clear();
         LCD_State1 = LCD_Buffer;
       }
       else if (!buttonPush) {
         LCD_State1 = LCD_Practice;
+
+        if (!buttonEncoder) {
+          Serial.println("pushed buttonENC in Practice");
+          lcd.clear();
+          TimerSet(200);
+          FlagPract = true;
+          easyWord = myWords[random(52)]; /// yoooooooooo
+          mediumWord = myWords[random(52, 104)];
+          hardWord = myWords[random(104, 156)];
+          challengeWord = myWords[random(156, 182)];
+          LCD_State1 = LCD_Buffer;
+        }
+      }
+      break;
+
+    case LCD_PractIn:
+      if (!buttonEncoder) {
+        lcd.clear();
+        TimerSet(1);
+        FlagPract = false;
+        Difficulty_State = Easy;
+        LCD_State1 = LCD_Write;
+      }
+      else if (buttonEncoder) {
+        LCD_State1 = LCD_PractIn; /// might not have to make it loop itself
       }
       break;
     
@@ -88,6 +125,7 @@ void tick_LCD() {
         TimerSet(1);
         FlagLett = false;
         ch = 'A';
+        LED_State1 = LED_Off;
         LCD_State1 = LCD_Write;
       }
       else if (buttonEncoder) {
@@ -107,23 +145,34 @@ void tick_LCD() {
 
     case LCD_Buffer:
       if (buttonPush) {
+        Serial.println("Buffer");
         LCD_State1 = LCD_Buffer;
       }
       else if (!buttonPush && prevLCDState == LCD_Write) {
+        Serial.println("Buffer LCDPractice");
         LCD_State1 = LCD_Practice;
       }
+        else if ( (!buttonEncoder && FlagPract) && prevLCDState == LCD_Practice) {
+        Serial.println("Buffer LCDPractIn");
+        LCD_State1 = LCD_PractIn;
+      }
       else if (!buttonPush && prevLCDState == LCD_Practice) {
+        Serial.println("Buffer LCDLetters");
         LCD_State1 = LCD_Letters;
       }
       else if ( (!buttonPush && !FlagLett) && prevLCDState == LCD_Letters) {
+        Serial.println("Buffe LCDWriter");
         LCD_State1 = LCD_Write;
       }
       else if ( (buttonEncoder && FlagLett) && prevLCDState == LCD_Letters) {
+        Serial.println("Buffer LCDLettPrac1");
         LCD_State1 = LCD_LettPrac;
       }
       else if (!buttonPush && prevLCDState == LCD_LettPrac) { /// added this 6/30
+        Serial.println("Buffer LCDLettPrac2");
         LCD_State1 = LCD_LettPrac;
       }
+      break;
   }
 
   // actions
@@ -141,6 +190,9 @@ void tick_LCD() {
       lcd.write("Practice");
       lcd.setCursor(3, 1);
       lcd.write("Morse Code");
+      break;
+
+    case LCD_PractIn:
       break;
 
     case LCD_Letters:
@@ -369,6 +421,128 @@ void tick_LED() {
   }
 }
 
+void tick_Diff() {
+   
+   // transitions
+   switch (Difficulty_State) {
+      case Easy:
+        prevDiffState = Easy;
+        if (buttonPush) {
+          lcd.clear();
+          Difficulty_State = DiffBuffer;
+        }
+        else if (!buttonPush) {
+          Difficulty_State = Easy;
+        }
+        break;
+      
+      case Medium: 
+        prevDiffState = Medium;
+        if (buttonPush) {
+          lcd.clear();
+          Difficulty_State = DiffBuffer;
+        }
+        else if (!buttonPush) {
+          Difficulty_State = Medium;
+        }
+        break;
+
+      case Hard:
+        prevDiffState = Hard;
+        if (buttonPush) {
+          lcd.clear();
+          Difficulty_State = DiffBuffer;
+        }
+        else if (!buttonPush) {
+          Difficulty_State = Hard;
+        }
+        break;
+
+      case Challenge:
+        prevDiffState = Challenge;
+        if (buttonPush) {
+          lcd.clear();
+          Difficulty_State = DiffBuffer;
+        }
+        else if (!buttonPush) {
+          Difficulty_State = Challenge;
+        }
+        break;
+
+      case DiffBuffer:
+        if (buttonPush) {
+          Difficulty_State = DiffBuffer;
+        }
+        else if (!buttonPush && prevDiffState == Easy) {
+          Difficulty_State = Medium;
+        }
+        else if (!buttonPush && prevDiffState == Medium) {
+          Difficulty_State = Hard;
+        }
+        else if (!buttonPush && prevDiffState == Hard) {
+          Difficulty_State = Challenge;
+        }
+        else if (!buttonPush && prevDiffState == Challenge) {
+          Difficulty_State = Easy;
+        }
+        break;
+   }
+
+   // actions
+   switch (Difficulty_State) {
+    case Easy:
+      lcd.clear();
+      isEasy = true;
+      isMedium = false;
+      isHard = false;
+      isChallenge = false;
+      lcd.setCursor(3, 0);
+      lcd.write("Easy  Mode");
+      lcd.setCursor(6, 1);
+      lcd.write(easyWord);
+      break;
+
+    case Medium:
+      lcd.clear();
+      isEasy = false;
+      isMedium = true;
+      isHard = false;
+      isChallenge = false;
+      lcd.setCursor(2, 0); 
+      lcd.write("Medium  Mode");
+      lcd.setCursor(5, 1); // maybe set a case where to try to center the word in lcd
+      lcd.write(mediumWord);
+      break;
+
+    case Hard:
+      lcd.clear();
+      isEasy = false;
+      isMedium = false;
+      isHard = true;
+      isChallenge = false;
+      lcd.setCursor(3, 0); // 0000000000000000
+      lcd.write("Hard  Mode"); // 
+      lcd.setCursor(3, 1); // maybe set a case where to try to center the word in lcd
+      lcd.write(hardWord);
+      break;
+
+    case Challenge:
+      lcd.clear();
+      isEasy = false;
+      isMedium = false;
+      isHard = false;
+      isChallenge = true;
+      lcd.setCursor(1, 0); // 0000000000000000
+      lcd.write("Challenge Mode");
+      lcd.setCursor(2, 1); // maybe set a case where to try to center the word in lcd
+      lcd.write(challengeWord);
+      break;
+
+    case DiffBuffer:
+      break;
+   }
+}
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -400,7 +574,14 @@ void loop() {
   buttonEncoder = digitalRead(53);
 
   tick_LCD();
-  tick_LED();
+
+  if (FlagLett) {
+    tick_LED();
+  }
+
+  if (FlagPract) {
+    tick_Diff();
+  }
   
   while (!TimerFlag) {}
   TimerFlag = 0;
