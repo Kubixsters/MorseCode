@@ -6,7 +6,8 @@ const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 enum LCD_States1 {LCD_Write, LCD_Practice, LCD_PractIn, LCD_Letters, LCD_LettPrac, LCD_Buffer} LCD_State1;
-enum LED_States1 {LED_Off, LED_Buffer, LED_Dot, LED_Dash, LED_Beat1, LED_Beat2, LED_Beat3, LED_Beat4, LED_Repeat} LED_State1;
+enum LED_States1 {LED_Off, LED_Buffer, LED_Dot, LED_Dash, LED_Beat1, LED_Beat2, LED_Beat3, LED_Beat4, LED_SpcBWLetters, LED_SpcBWWords} LED_State1;
+enum Buzz_States {} Buzz_State;
 enum DifficultyStates {Easy, Medium, Hard, Challenge, DiffBuffer} Difficulty_State;
 
 char buttonEncoder = 0;
@@ -29,16 +30,16 @@ char* easyWord;
 char* mediumWord;
 char* hardWord;
 char* challengeWord;
-
-// easyWord = myWords[random(52)];
+char message[21];
 
 char ch = 'A';
 int lastStateCLK;
 int currStateCLK;
 
 bool FlagLett = false;
-bool FlagRepeat = false;
+bool FlagRepeat = false; // no clue why its here, its not used. maybe delete
 bool FlagPract = false;
+
 bool isEasy = false;
 bool isMedium = false;
 bool isHard = false;
@@ -78,9 +79,10 @@ void tick_LCD() {
           lcd.clear();
           TimerSet(200);
           FlagPract = true;
-          easyWord = myWords[random(52)]; /// yoooooooooo
+          easyWord = myWords[random(52)];
           mediumWord = myWords[random(52, 104)];
           hardWord = myWords[random(104, 156)];
+          WrdsToArray();
           challengeWord = myWords[random(156, 182)];
           LCD_State1 = LCD_Buffer;
         }
@@ -89,14 +91,31 @@ void tick_LCD() {
 
     case LCD_PractIn:
       if (!buttonEncoder) {
+        Serial.println("pushed buttonENC in PractIn");
         lcd.clear();
         TimerSet(1);
+        clearMsg();
         FlagPract = false;
+        FlagLett = false;
+        isEasy = false;
+        isMedium = false;
+        isHard = false;
+        isChallenge = false;
         Difficulty_State = Easy;
         LCD_State1 = LCD_Write;
       }
       else if (buttonEncoder) {
+
         LCD_State1 = LCD_PractIn; /// might not have to make it loop itself
+        if (isEasy && counter < 3) {
+          Serial.print("counter = ");
+          Serial.println(counter);
+          ch = easyWord[counter];
+          FlagLett = true;
+        }
+        else {
+          counter = 0;
+        }
       }
       break;
     
@@ -232,7 +251,7 @@ void tick_LED() {
       Serial.println("buffer");
       if (buttonPush) { ////added this july 2
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (unit < 1) {
@@ -249,7 +268,7 @@ void tick_LED() {
           LED_State1 = LED_Beat4;
         }
         else if (prevLEDState == LED_Beat4) {
-          LED_State1 = LED_Beat1;
+          LED_State1 = LED_SpcBWLetters; // LED_State1 = LED_Beat1;
         }
       }
       break;
@@ -258,7 +277,7 @@ void tick_LED() {
       Serial.println("dot");
       if (buttonPush) { ////added this july 2
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (unit < 1) {
@@ -274,7 +293,7 @@ void tick_LED() {
       Serial.println("dash");
       if (buttonPush) { ////added this july 2
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (unit < 5) {
@@ -287,12 +306,13 @@ void tick_LED() {
       break; 
     
     case LED_Beat1:
+      Serial.println(ch); ///////////// july 26
       prevLEDState = LED_Beat1;
       Serial.println("beat1");
       if (buttonPush) { ////added this july 2
         Serial.println("beat1 pB");
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (ch == 'A' || ch == 'E' || ch == 'F' || ch == 'H' || ch == 'I' || ch == 'J' || ch == 'L' || ch == 'P' || ch == 'R' || ch == 'S' || ch == 'U' || ch == 'V' || ch == 'W') {
@@ -308,7 +328,7 @@ void tick_LED() {
       Serial.println("beat2");
       if (buttonPush) { ////added this july 2
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (ch == 'B' || ch == 'C' || ch == 'D' || ch == 'F' || ch == 'H' || ch == 'I' || ch == 'K' || ch == 'N' || ch == 'S' || ch == 'U' || ch == 'V' || ch == 'X' || ch == 'Y') {
@@ -318,7 +338,8 @@ void tick_LED() {
         LED_State1 = LED_Dash;
       }
       else if (ch == 'E' || ch == 'T') {
-        LED_State1 = LED_Repeat;
+        counter++; // july 29
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       break;
@@ -328,7 +349,7 @@ void tick_LED() {
       Serial.println("beat3");
       if (buttonPush) { ////added this july 2
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (ch == 'B' || ch == 'D' || ch == 'G' || ch == 'H' || ch == 'L' || ch == 'Q' || ch == 'R' || ch == 'S' || ch == 'V' || ch == 'X' || ch == 'Z') {
@@ -338,7 +359,8 @@ void tick_LED() {
         LED_State1 = LED_Dash;
       }
       else if (ch == 'A' || ch == 'I' || ch == 'M' || ch == 'N') {
-        LED_State1 = LED_Repeat;
+        counter++; // july 29
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       break;
@@ -348,32 +370,51 @@ void tick_LED() {
       Serial.println("beat4");
       if (buttonPush) { ////added this july 2
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (ch == 'B' || ch == 'C' || ch == 'F' || ch == 'H' || ch == 'L' || ch == 'P' || ch == 'Z') {
+        counter++; // july 29
         LED_State1 = LED_Dot;
       }
       else if (ch == 'J' || ch == 'Q' || ch == 'V' || ch == 'X' || ch == 'Y') {
+        counter++; // july 29
         LED_State1 = LED_Dash;
       }
       else if (ch == 'D' || ch == 'G' || ch == 'K' || ch == 'O' || ch == 'R' || ch == 'S' || ch == 'U' || ch == 'W') {
-        LED_State1 = LED_Repeat;
+        counter++; // july 29
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       break;
 
-    case LED_Repeat:
-      Serial.println("repeat"); // write the condition for when bP during this case
+    case LED_SpcBWLetters:
+      Serial.println("SpcBWLetters"); // write the condition for when bP during this case
       if (buttonPush) {
         unit = 0;
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
         prevLEDState = LED_Beat1;
       }
       else if (unit < 15) {
-        LED_State1 = LED_Repeat;
+        LED_State1 = LED_SpcBWLetters;
       }
       else if ( !(unit < 15) ) {
+        unit = 0;
+        LED_State1 = LED_Off;
+      }
+      break;
+
+    case LED_SpcBWWords:
+      Serial.println("SpcBWWords");
+      if (buttonPush) {
+        unit = 0;
+        LED_State1 = LED_SpcBWWords;
+        prevLEDState = LED_Beat1;
+      }
+      else if (unit < 35) {
+        LED_State1 = LED_SpcBWWords;
+      }
+      else if ( !(unit < 35) ) {
         unit = 0;
         LED_State1 = LED_Off;
       }
@@ -414,7 +455,12 @@ void tick_LED() {
     case LED_Beat4:
       break;
 
-    case LED_Repeat:
+    case LED_SpcBWLetters:
+      ++unit;
+      LED_Blank();
+      break;
+
+    case LED_SpcBWWords:
       ++unit;
       LED_Blank();
       break;
@@ -491,11 +537,11 @@ void tick_Diff() {
    // actions
    switch (Difficulty_State) {
     case Easy:
-      lcd.clear();
       isEasy = true;
       isMedium = false;
       isHard = false;
       isChallenge = false;
+      lcd.clear();
       lcd.setCursor(3, 0);
       lcd.write("Easy  Mode");
       lcd.setCursor(6, 1);
@@ -503,11 +549,11 @@ void tick_Diff() {
       break;
 
     case Medium:
-      lcd.clear();
       isEasy = false;
       isMedium = true;
       isHard = false;
       isChallenge = false;
+      lcd.clear();
       lcd.setCursor(2, 0); 
       lcd.write("Medium  Mode");
       lcd.setCursor(5, 1); // maybe set a case where to try to center the word in lcd
@@ -515,11 +561,11 @@ void tick_Diff() {
       break;
 
     case Hard:
-      lcd.clear();
       isEasy = false;
       isMedium = false;
       isHard = true;
       isChallenge = false;
+      lcd.clear();
       lcd.setCursor(3, 0); // 0000000000000000
       lcd.write("Hard  Mode"); // 
       lcd.setCursor(3, 1); // maybe set a case where to try to center the word in lcd
@@ -527,11 +573,11 @@ void tick_Diff() {
       break;
 
     case Challenge:
-      lcd.clear();
       isEasy = false;
       isMedium = false;
       isHard = false;
       isChallenge = true;
+      lcd.clear();
       lcd.setCursor(1, 0); // 0000000000000000
       lcd.write("Challenge Mode");
       lcd.setCursor(2, 1); // maybe set a case where to try to center the word in lcd
@@ -597,4 +643,45 @@ void LED_Blank() {
   digitalWrite(redPin, LOW);
   digitalWrite(greenPin, LOW);
   digitalWrite(bluePin, LOW);
+}
+
+
+void WrdsToArray() {
+  // main idea: for each word, get each char. ex: "XIS" -> 'X', 'I', 'S'. 
+  // read until theres a blank spot: '\0'
+  // ^ maybe have an array to hold all words. easy: 3 chars
+  // ^ med: 4-6 chars; hard: 7-9 chars; challenge: 10-15 chars. have a space in between so that \0 can be read
+
+  // try to use my tick_LED function so that it can play on LED. will have to use my ch variable
+  // ^ will have to implement: space between letters (3 units) and space between words (7 units). 
+  // ^ somewhere in that function
+
+  for (int i = 0; i < 21; i++) {
+    if (i == 3 || i == 10 || i == 20 ) {
+      message[i] = '\0';
+    }
+    else if (i < 3) {
+      message[i] = easyWord[i];
+    }
+    else if (i >= 4 && i < 10) {
+      message[i] = mediumWord[i - 4];
+    }
+    else if (i >= 11 && i < 21) {
+      message[i] = hardWord[i - 11];
+    }
+  }
+
+  for (int i = 0; i < 21; i++) {
+    Serial.println(message[i]);
+  }
+}
+
+void clearMsg() {
+  for (int i = 0; i < 21; i++) {
+    message[i] = '\0';
+  }
+
+  for (int i = 0; i < 21; i++) {
+    Serial.println(message[i]);
+  }
 }
