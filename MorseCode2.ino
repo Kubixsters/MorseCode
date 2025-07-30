@@ -7,7 +7,7 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 enum LCD_States1 {LCD_Write, LCD_Practice, LCD_PractIn, LCD_Letters, LCD_LettPrac, LCD_Buffer} LCD_State1;
 enum LED_States1 {LED_Off, LED_Buffer, LED_Dot, LED_Dash, LED_Beat1, LED_Beat2, LED_Beat3, LED_Beat4, LED_SpcBWLetters, LED_SpcBWWords} LED_State1;
-enum Buzz_States {} Buzz_State;
+enum Buzz_States {Buzz_Buffer, Buzz_Dot, Buzz_Dash, Buzz_Beat1, Buzz_Beat2, Buzz_Beat3, Buzz_Beat4, Buzz_SpcBWLetters} Buzz_State;
 enum DifficultyStates {Easy, Medium, Hard, Challenge, DiffBuffer} Difficulty_State;
 
 char buttonEncoder = 0;
@@ -113,8 +113,26 @@ void tick_LCD() {
           ch = easyWord[counter];
           FlagLett = true;
         }
-        else {
-          counter = 0;
+        //else {
+          // counter = 0; ///////// july 29
+        //}
+        if (isMedium && counter <= 5) {
+          if (mediumWord[counter] == '\0') {
+            counter = 0;
+          }
+          Serial.print("counter = ");
+          Serial.println(counter);
+          ch = mediumWord[counter];
+          FlagLett = true;
+        }
+        if (isHard && counter <= 8) {
+          if (hardWord[counter] == '\0') {
+            counter = 0;
+          }
+          Serial.print("counter = ");
+          Serial.println(counter);
+          ch = hardWord[counter];
+          FlagLett = true;
         }
       }
       break;
@@ -212,6 +230,15 @@ void tick_LCD() {
       break;
 
     case LCD_PractIn:
+      if (isEasy && counter >= 3) { ///////// july 29
+        counter = 0;
+      }
+      if (isMedium && counter >= 6 ) {
+        counter = 0;
+      }
+      if (isHard && counter >= 21) {
+        counter = 0;
+      }
       break;
 
     case LCD_Letters:
